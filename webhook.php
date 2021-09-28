@@ -5,17 +5,18 @@ ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 
-$ini = parse_ini_file('config.ini')
+//подлюкчение классов
+require '/classes/Object.php';
+
+$ini = parse_ini_file('config.ini');
+
 //подключение к Телеграм
 const TOKEN = $ini['token'];
 const BASE_URL = 'https://api.telegram.org/bot' . TOKEN . '/';
+const CRM_API_KEY = $ini['crm_api'];
 
 $update = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY);
-if(!$update) {
-	print("Обновления не поступили");
-} else {
-	print_r($update);
-}
+
 //ответ в Телеграмм
 function sendRequest($method, $params = []) {
     if(!empty($params)) {
@@ -38,48 +39,39 @@ if ($userMessage == "/start") {
 
 }
 $messageArray = explode(", ", $userMessage);
-if ($messageArray[0] == "Дом" || $messageArray[0] == "Участок") {
-	sendRequest('sendMessage', ['chat_id' => $chat_id, 'text' => detectParameters(2, $messageArray)]);
-}
-elseif ($messageArray[0] == "Коммерция") {
-	sendRequest('sendMessage', ['chat_id' => $chat_id, 'text' => detectParameters(3, $messageArray)]);
-}
-else {
-	sendRequest('sendMessage', ['chat_id' => $chat_id, 'text' => detectParameters(1, $messageArray)]);
+$object = new Object($messageArray);
+
+function checkInCrm() {
+	$url = "http://kluch.intrumnet.com:81/sharedapi/stock/filter";
+	$params=array(  
+            'type'=>1,  
+            'limit'=10,  
+            'fields' => array(  
+                array('id'=>470,'value'=>"6000000"),  
+                array('id'=>485,'value'=>"Алтуфьево")  
+            ),  
+            'order_field' => 470,  
+            'order'=> "desc"  
+        ); 
+    $post = array(  
+        'apikey' =>CRM_API_KEY,  
+         'params'=>$params  
+    );  
+          
+	$ch = curl_init();  
+	curl_setopt($ch, CURLOPT_URL, $url);  
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  
+	curl_setopt($ch, CURLOPT_POST, 1);  
+	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));  
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);  
+	$result = json_decode(curl_exec($ch));  
+	curl_close ($ch);
+
+	if($result) {
+		//send message?	
+	}  
 }
 
-function detectParameters($type, $array) {
-	$street = "";
-	$house = "";
-	$area = "";
-	$rooms = "";
-	$floor = "";
-	$price = "";
-	foreach ($array as $value) {
-		if(strripos($value, "ком") !== false) {
-			$rooms = trim(str_replace("ком", "", $value));
-		}
-		if(strripos($value, "м2") !== false || strripos($value, "квм") || strripos($value, "сот")) {
-			$areaData = ["м2", "квм", "сот"];
-			$area = trim(str_replace($areaData, "", $value));
-		}
-		if(strripos($value, "эт") !== false) {
-			$floor = trim(str_replace("эт", "", $value));
-		}
-		if(is_numeric($value) && strlen($value) > 3) {
-			$price = $value;
-		}
-	}
+function checkInDatabase() {
 
-	if($type == 1) {
-		$street = $array[0];
-		$house = $array[1];
-	} 
-	else {
-		$street = $array[1];
-		$house = $array[2];
-	}
-
-	$result = "Вы ввели:\nТип объекта: $type, улица: $street, дом: $house, площадь: $area, этаж: $floor, цена: $price";
-	return $result;
 }
