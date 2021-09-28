@@ -44,4 +44,9 @@ class Object {
 	
 	}
 
+	public function getText() {
+		$text = "Вы ввели:\nулица $this->street, дом: $this->house, этаж: $this->floor, площадь: $this->area, комнат: $this->rooms, цена: $this->price";
+		return $text;
+	}
+
 }
