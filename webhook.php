@@ -5,9 +5,10 @@ ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 
-//подключение классов
-require 'classes/Object.php';
+//подключение констант и классов
 require 'constants.php';
+require 'classes/Object.php';
+require 'classes/CrmFinder.php';
 
 $update = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY);
 
@@ -34,38 +35,11 @@ if ($userMessage == "/start") {
 }
 $messageArray = explode(", ", $userMessage);
 $object = new Object($messageArray);
+$crmFinder = new CrmFinder();
 sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $object->getText()]);
+sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $crmFinder->check($object)]);
 
-// function checkInCrm() {
-// 	$url = "http://kluch.intrumnet.com:81/sharedapi/stock/filter";
-// 	$params=array(  
-//             'type'=>1,  
-//             'limit'=10,  
-//             'fields' => array(  
-//                 array('id'=>470,'value'=>"6000000"),  
-//                 array('id'=>485,'value'=>"Алтуфьево")  
-//             ),  
-//             'order_field' => 470,  
-//             'order'=> "desc"  
-//         ); 
-//     $post = array(  
-//         'apikey' =>CRM_API_KEY,  
-//          'params'=>$params  
-//     );  
-          
-// 	$ch = curl_init();  
-// 	curl_setopt($ch, CURLOPT_URL, $url);  
-// 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);  
-// 	curl_setopt($ch, CURLOPT_POST, 1);  
-// 	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));  
-// 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);  
-// 	$result = json_decode(curl_exec($ch));  
-// 	curl_close ($ch);
 
-// 	if($result) {
-// 		//send message?	
-// 	}  
-// }
 
 // function checkInDatabase() {
 

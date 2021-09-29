@@ -1,29 +1,33 @@
 <?php
 
 class Object {
-	private $type;
-	private $city;
-	private $street;
-	private $house;
-	private $floor;
-	private $area;
-	private $rooms;
-	private $price;
+	public $type;
+	public $city;
+	public $street;
+	public $house;
+	public $floor;
+	public $area;
+	public $landArea;
+	public $rooms;
+	public $price;
 
 	public function __construct($array) {
 		foreach ($array as $value) {
 			if(strripos($value, "ком") !== false) {
 				$this->rooms = trim(str_replace("ком", "", $value));
 			}
-			if(strripos($value, "м2") !== false || strripos($value, "квм") || strripos($value, "сот")) {
-				$areaData = ["м2", "квм", "сот"];
+			if(strripos($value, "м2") !== false || strripos($value, "квм")) {
+				$areaData = ["м2", "квм"];
 				$this->area = trim(str_replace($areaData, "", $value));
+			}
+			if(strripos($value, "сот") !== false) {
+				$this->landArea = trim(str_replace("сот", "", $value));
 			}
 			if(strripos($value, "эт") !== false) {
 				$this->floor = trim(str_replace("эт", "", $value));
 			}
 			if(is_numeric($value) && strlen($value) > 3) {
-				$this->price = $value;
+				$this->price = $value * 1000;
 			}
 		}
 		if($array[0] == 'Дом' || $array[0] == 'Участок') {
