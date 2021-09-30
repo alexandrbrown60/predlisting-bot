@@ -7,40 +7,54 @@ ini_set('display_startup_errors', 1);
 
 //подключение констант и классов
 require 'constants.php';
+require 'classes/Telegram.php';
+require 'classes/KeyboardButton.php';
 require 'classes/Object.php';
 require 'classes/CrmFinder.php';
+require 'classes/DatabaseConnection.php';
+require 'classes/DatabaseManager.php';
+
+$telegram = new Telegram();
 
 $update = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY);
 
-//ответ в Телеграмм
-function sendRequest($method, $params = []) {
-    if(!empty($params)) {
-        $url = BASE_URL . $method . '?' . http_build_query($params);
-    }
-    else {
-        $url = BASE_URL . $method;
-    }
-    
-    return json_decode(file_get_contents($url), JSON_OBJECT_AS_ARRAY);
-}
-
 //собираем данные из сообщения
 $userMessage = $update['message']['text'];
+$userName = $update['message']['from']['first_name'];
 $chat_id = $update['message']['from']['id'];
-$text = "";
 
+//присылаем приветственное сообщение
 if ($userMessage == "/start") {
 	$text = "Для того, чтобы забронировать объект введите его адрес и цену. Указывайте тип объекта, если это не квартира!\n\nПримеры: Кораблейстроителей, 15, 2 ком, 45 м2, 10 эт, 6700\nДом, Лужайкина, 15, 100 м2, 4500\nУчасток, Мамадышский тракт, 38, 5 сот, 2200\nКоммерция, Техническая, 10, 12500";
-
+    $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $text]);
+} else {
+    //если пользователь прислал нам адрес
+    $messageArray = explode(", ", $userMessage);
+    $object = new Object($messageArray);
+    $acceptButton = new KeyboardButton("Да, верно", $userMessage);
+    $cancelButton = new KeyboardButton("Нет, неверно", "Неверно");
+    $keyboardButtons = [$acceptButton, $cancelButton];
+    $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $object->getText(), "reply_markup" => $keyboardButtons]);
 }
-$messageArray = explode(", ", $userMessage);
-$object = new Object($messageArray);
-$crmFinder = new CrmFinder();
-sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $object->getText()]);
-sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $crmFinder->check($object)]);
 
+//обрабатываем кнопки
+if ($update['callback_query']['data'] == "Неверно") {
+    $text = "Пришлите адрес повторно. Разделяйте данные запятыми.";
+    $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $text]);
+}
+else {
+    $data = $update['callback_query']['data'];
+    $dataMessage = explode(", ", $data);
+    $object = new Object($dataMessage);
+    $crmFinder = new CrmFinder();
+    $database = new DatabaseManager('alexanb0_listing');
 
-
-// function checkInDatabase() {
-
-// }
+    //проверяем, есть ли объект в CRM
+    if($crmFinder->check($object) == "Объекта нет в CRM") {
+        $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $database->check($object, $userName)]);
+    }
+    else {
+        $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $crmFinder->check($object)]);
+    }
+    
+}
