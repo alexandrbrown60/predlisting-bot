@@ -49,7 +49,7 @@ class CrmFinder {
 				array('id' => 1522, 'value' => 'Наша база')
 			);
 			$houseFields = array(
-				array('id' => 1149, 'value' => $object->street),
+				array('id' => 1149, 'value' => $object->street . " ул"),
 				array('id' => 556, 'value' => $object->house),
 				array('id' => 530, 'value' => $object->rooms),
 				array('id' => 526, 'value' => $object->area),
@@ -58,7 +58,7 @@ class CrmFinder {
 				array('id' => 1538, 'value' => 'Наша база')
 			);
 			$commercialFields = array(
-				array('id' => 668, 'value' => $object->street),
+				array('id' => 668, 'value' => $object->street . " ул"),
 				array('id' => 515, 'value' => $object->house),
 				array('id' => 488, 'value' => $object->area),
 				array('id' => 506, 'value' => $object->floor),

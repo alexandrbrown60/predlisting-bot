@@ -10,6 +10,7 @@ class Object {
 	public $landArea;
 	public $rooms;
 	public $price;
+	public $owner;
 
 	public function __construct($array) {
 		foreach ($array as $value) {
@@ -45,12 +46,16 @@ class Object {
 			$this->street = $array[0];
 			$this->house = $array[1];
 		}
+		$this->owner = end($array);
 	
 	}
 
-	public function getText() {
-		$text = "Вы ввели:\nулица $this->street, дом: $this->house, этаж: $this->floor, площадь: $this->area, комнат: $this->rooms, цена: $this->price";
-		return $text;
+	public function checkPrice() {
+		if(empty($this->price)) {
+			$text = "Вы не ввели стоимость объекта";
+			return false;
+		}
+		return true;
 	}
 
 

@@ -2,11 +2,12 @@
 
 class DatabaseManager extends DatabaseConnection {
 	public function check($object, $name) {
-		$sql = "SELECT * FROM listing WHERE street = :street AND house = :house AND price = :price";
+		$sql = "SELECT * FROM listing WHERE street = :street AND house = :house AND price = :price AND owner = :owner";
 		$inputs = [
 			':street' => $object->street,
 			':house' => $object->house,
-			':price' => $object->price
+			':price' => $object->price,
+			':owner' => $object->owner
 		];
 
 		$query = PDO::prepare($sql);
@@ -32,7 +33,7 @@ class DatabaseManager extends DatabaseConnection {
 
 	private function add($object, $name) {
 		$date = date('Y-m-d', strtotime('+2 day'));
-		$sql = "INSERT INTO listing (street, house, rooms, floor, area, landArea, price, name, date) VALUES (
+		$sql = "INSERT INTO listing (street, house, rooms, floor, area, landArea, price, owner, name, date) VALUES (
 			:street,
 			:house,
 			:rooms,
@@ -40,6 +41,7 @@ class DatabaseManager extends DatabaseConnection {
 			:area,
 			:landArea,
 			:price,
+			:owner,
 			:name,
 			:date
 		)";
@@ -51,6 +53,7 @@ class DatabaseManager extends DatabaseConnection {
 			":area" => $object->area,
 			":landArea" => $object->landArea,
 			":price" => $object->price,
+			":owner" => $object->owner,
 			":name" => $name,
 			":date" => $date
 		];
