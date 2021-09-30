@@ -31,18 +31,21 @@ if ($userMessage == "/start") {
     //если пользователь прислал нам адрес
     $messageArray = explode(", ", $userMessage);
     $object = new Object($messageArray);
-    $acceptButton = new KeyboardButton("Да, верно", $userMessage);
-    $cancelButton = new KeyboardButton("Нет, неверно", "Неверно");
-    $keyboardButtons = [$acceptButton, $cancelButton];
-    $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $object->getText(), "reply_markup" => $keyboardButtons]);
+    $acceptButton = array("text" => "Да, верно", "callback_data" => $userMessage);
+    $cancelButton = array("text" => "Нет, неверно", "callback_data" => "Неверно");
+    $keyboard = [[$acceptButton], [$cancelButton]];
+    $replyMarkup = json_encode(array('inline_keyboard' => $keyboard));
+    $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $object->getText(), "reply_markup" => $replyMarkup]);
 }
 
 //обрабатываем кнопки
 if ($update['callback_query']['data'] == "Неверно") {
+    $chat_id = $update['callback_query']['from']['id'];
     $text = "Пришлите адрес повторно. Разделяйте данные запятыми.";
     $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $text]);
 }
 else {
+    $chat_id = $update['callback_query']['from']['id'];
     $data = $update['callback_query']['data'];
     $dataMessage = explode(", ", $data);
     $object = new Object($dataMessage);
