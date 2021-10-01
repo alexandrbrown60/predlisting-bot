@@ -7,7 +7,7 @@ class CrmFinder {
 		$params=array(  
 	            'type'=>$object->type,  
 	            'limit'=>10,  
-	            'fields' => $this->setParams($object->type, $object),  
+	            'fields' => $this->setParams($object),  
 	            'order_field' => 470,  
 	            'order'=> "desc"  
 	        ); 
@@ -37,7 +37,7 @@ class CrmFinder {
 		}
 	}
 
-	private function setParams($type, $object) {
+	private function setParams($object) {
 
 			$flatFields = array(
 				array('id' => 667, 'value' => $object->street . " ул"), 
@@ -66,10 +66,10 @@ class CrmFinder {
 				array('id' => 1530, 'value' => 'Наша база')
 			);
 
-			if ($type == 1) {
+			if ($object->type == 1) {
 				return $flatFields;
 			}
-			elseif ($type == 2) {
+			elseif ($object->type == 2) {
 				return $commercialFields;
 			}
 			else {

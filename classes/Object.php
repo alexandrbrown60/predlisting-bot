@@ -32,12 +32,12 @@ class Object {
 			}
 		}
 		if($array[0] == 'Дом' || $array[0] == 'Участок') {
-			$this->type = 2;
+			$this->type = 3;
 			$this->street = $array[1];
 			$this->house = $array[2];
 		}
 		elseif ($array[0] == 'Коммерция') {
-			$this->type = 3;
+			$this->type = 2 ;
 			$this->street = $array[1];
 			$this->house = $array[2];
 		}
