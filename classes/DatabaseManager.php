@@ -1,7 +1,7 @@
 <?php 
 
 class DatabaseManager extends DatabaseConnection {
-	public function check($object, $name) {
+	public function check($object) {
 		$sql = "SELECT * FROM listing WHERE street = :street AND house = :house AND price = :price AND owner = :owner";
 		$inputs = [
 			':street' => $object->street,
@@ -16,24 +16,20 @@ class DatabaseManager extends DatabaseConnection {
 		if (count($result) > 0 ) {
 			$currentDate = date('Y-m-d');
 			if($result[0]['date'] >= $currentDate) {
-				$message = "Объект забронирован пользователем ".$result[0]['name'];
-				return $message;
+				return false;
 			}
 			else {
-				$message = "Объект свободен, однако ранее был забронирован пользователем ".$name.". Можете узнать у него подробности работы с данным объектом.";
-				return $message;
+				$this->delete($result[0]['id']);
+				return true;
 			}
 		}
 		else {
-			$message = "Объект свободен и будет забронирован за вами на последующие 2 дня";
-			$this->add($object, $name);
-			return $message;
+			return true;
 		}
 	}
 
-	private function add($object, $name) {
-		$date = date('Y-m-d', strtotime('+2 day'));
-		$sql = "INSERT INTO listing (street, house, rooms, floor, area, landArea, price, owner, name, date) VALUES (
+	public function add($object, $name) {
+		$sql = "INSERT INTO listing (street, house, rooms, floor, area, landArea, price, owner, name) VALUES (
 			:street,
 			:house,
 			:rooms,
@@ -42,8 +38,7 @@ class DatabaseManager extends DatabaseConnection {
 			:landArea,
 			:price,
 			:owner,
-			:name,
-			:date
+			:name
 		)";
 		$inputs = [
 			":street" => $object->street,
@@ -54,10 +49,23 @@ class DatabaseManager extends DatabaseConnection {
 			":landArea" => $object->landArea,
 			":price" => $object->price,
 			":owner" => $object->owner,
-			":name" => $name,
-			":date" => $date
+			":name" => $name
 		];
 		$query = PDO::prepare($sql);
 		$query->execute($inputs) or die(print_r($query->errorInfo(), true));
+		return PDO::lastInsertId();
+	}
+
+	public function delete($id) {
+		$sql = "DELETE FROM listing WHERE id = :id";
+		$query = PDO::prepare($sql);
+		$query->execute(array(":id" => $id)) or die(print_r($query->errorInfo(), true));
+	}
+
+	public function setDate($id, $numberOfDays) {
+		$date = date('Y-m-d', strtotime("+$numberOfDays day"));
+		$sql = "UPDATE listing SET date = :date WHERE id = :id";
+		$query = PDO::prepare($sql);
+		$query->execute(array(":date" => $date, ":id" => $id)) or die(print_r($query->errorInfo(), true));
 	}
 }

@@ -14,42 +14,83 @@ require 'classes/CrmFinder.php';
 require 'classes/DatabaseConnection.php';
 require 'classes/DatabaseManager.php';
 
-$telegram = new Telegram();
-
 $update = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY);
-
-//собираем данные из сообщения
-$userMessage = $update['message']['text'];
-$userName = $update['message']['from']['first_name'];
-$chat_id = $update['message']['from']['id'];
+$telegram = new Telegram($update);
+$database = new DatabaseManager('alexanb0_listing');
 
 //присылаем приветственное сообщение
-if ($userMessage == "/start") {
-	$text = "Для того, чтобы забронировать объект введите его адрес и цену. Указывайте тип объекта, если это не квартира!\n\nПримеры: Кораблейстроителей, 15, 2 ком, 45 м2, 10 эт, 6700, Алиса\nДом, Лужайкина, 15, 100 м2, 4500, Айдар\nУчасток, Мамадышский тракт, 38, 5 сот, 2200, Гульназ\nКоммерция, Техническая, 10, 12500, Гульчачак";
-    $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $text]);
-} else {
-    //если пользователь прислал нам адрес
-    $messageArray = explode(", ", $userMessage);
-    $object = new Object($messageArray);
+if($telegram->isMessage()) {
+    //собираем данные из сообщения
+    $userMessage = $telegram->userMessage;
+    $userName = $telegram->userName;
+    $chat_id = $telegram->userId;
 
-    //проверка ввода стоимости
-    if($object->checkPrice() == false) {
-        $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => "Вы не ввели стоимость объекта"]);
-    }
-    else {
-        //проверяем на наличие в CRM или в БД
-        $crmFinder = new CrmFinder();
-        $database = new DatabaseManager('alexanb0_listing');
-        $checkingResult = $crmFinder->check($object); 
-        if($checkingResult == "Объекта нет в CRM") {
-            $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $database->check($object, $userName)]);
+    if ($userMessage == "/start") {
+    $text = "Для того, чтобы забронировать объект введите его адрес и цену. Указывайте тип объекта, если это не квартира!\n\nПримеры: Кораблейстроителей, 15, 2 ком, 45 м2, 10 эт, 6700, Алиса\nДом, Лужайкина, 15, 100 м2, 4500, Айдар\nУчасток, Мамадышский тракт, 38, 5 сот, 2200, Гульназ\nКоммерция, Техническая, 10, 12500, Гульчачак";
+    $telegram->sendMessage(["chat_id" => $chat_id, "text" => $text]);
+    } else {
+        //если пользователь прислал нам адрес
+        $messageArray = explode(", ", $userMessage);
+        $object = new Object($messageArray);
+
+        //проверка ввода стоимости
+        if($object->checkPrice() == false) {
+            $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Вы не ввели стоимость объекта"]);
         }
         else {
-            $telegram->sendRequest("sendMessage", ["chat_id" => $chat_id, "text" => $checkingResult]);
-        }
-    }
-    
+            //проверяем на наличие в CRM
+            $crmFinder = new CrmFinder();
+            $checkingResult = $crmFinder->check($object);
+            if($checkingResult == "Объекта нет в CRM") {
 
-    
+                //Проверяем наличие в БД
+                $objectExist = $database->check($object);
+                if($objectExist) {
+
+                    //Если объект свободен, записываем его в БД и отправляем кнопки
+                    $id = $database->add($object, $userName);
+
+                    $button1 = array("text" => "Встреча","callback_data" => "meet$id");
+                    $button2 = array("text" => "Бронь", "callback_data" => "book$id");
+                    $button3 = array("text" => "Отказ", "callback_data" => "fail$id");
+                    $inlineKeyboard = [[$button1],[$button2], [$button3]];
+                    $keyboard = ["inline_keyboard" => $inlineKeyboard];
+                    $replyMarkup = json_encode($keyboard);
+                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект свободен. Выберите действие:", "reply_markup" => $replyMarkup]);
+                
+                }
+                else {
+                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект забронирован"]);
+                }
+                
+            }
+            else {
+                $telegram->sendMessage(["chat_id" => $chat_id, "text" => $checkingResult]);
+            }
+        }
+           
+    }
 }
+else {
+    $clickedButton = $telegram->clickedButton;
+    $chatId = $telegram->userId;
+
+    if(strripos($clickedButton, "meet") !== false) {
+        $objectId = str_replace("meet", "", $clickedButton);
+        $database->setDate($objectId, 4);
+        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Объект забронирован за вами на 4 дня вперёд"]);
+    }
+    if(strripos($clickedButton, "book") !== false) {
+        $objectId = str_replace("book", "", $clickedButton);
+        $database->setDate($objectId, 2);
+        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Объект забронирован за вами на 2 дня вперёд"]);
+    }
+    if(strripos($clickedButton, "fail") !== false) {
+        $objectId = str_replace("fail", "", $clickedButton);
+        $database->delete($objectId);
+    }
+}
+
+
+
 
