@@ -82,7 +82,11 @@ class DatabaseManager extends DatabaseConnection {
 	}
 
 	public function deleteNotRelevant() {
-
+		//delete with no date
+		$lastMonth = date('Y-m-d', strtotime("-15 day"));
+		$sql = "DELETE FROM listing WHERE date IS NULL OR date < :lastMonth";
+		$query = PDO::prepare($sql);
+		$query->execute([":lastMonth" => $lastMonth]) or die(print_r($query->errorInfo(), true));
 	}
 
 	public function delete($id) {
