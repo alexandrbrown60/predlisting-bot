@@ -56,6 +56,20 @@ class DatabaseManager extends DatabaseConnection {
 		return PDO::lastInsertId();
 	}
 
+	public function get($byId) {
+		$sql = "SELECT * FROM listing WHERE id = :id";
+		$query = PDO::prepare($sql);
+		$query->execute([":id" => $byId]) or die(print_r($query->errorInfo(), true));
+		$result = $query->fetchAll();
+		if (count($result) > 0 ) {
+			$street = $result[0]['street'];
+			$house = $result[0]['house'];
+			$price = $result[0]['price'];
+			$data = "$street, $house, $price";
+			return $data;
+		}
+	}
+
 	public function delete($id) {
 		$sql = "DELETE FROM listing WHERE id = :id";
 		$query = PDO::prepare($sql);

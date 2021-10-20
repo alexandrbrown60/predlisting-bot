@@ -78,12 +78,14 @@ else {
     if(strripos($clickedButton, "meet") !== false) {
         $objectId = str_replace("meet", "", $clickedButton);
         $database->setDate($objectId, 4);
-        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Объект забронирован за вами на 4 дня вперёд"]);
+        $object = $database->get($objectId);
+        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Объект $object забронирован за вами на 4 дня вперёд"]);
     }
     if(strripos($clickedButton, "book") !== false) {
         $objectId = str_replace("book", "", $clickedButton);
         $database->setDate($objectId, 2);
-        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Объект забронирован за вами на 2 дня вперёд"]);
+        $object = $database->get($objectId);
+        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Объект $object забронирован за вами на 2 дня вперёд"]);
     }
     if(strripos($clickedButton, "fail") !== false) {
         $objectId = str_replace("fail", "", $clickedButton);
