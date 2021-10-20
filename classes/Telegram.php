@@ -6,7 +6,7 @@ class Telegram {
 	public $userId;
 	public $clickedButton;
 
-	public function __construct($data) {
+	public function getUpdate($data) {
 		//если прислано текстовое сообщение
 		if(isset($data['message']['text'])) {
 			$this->userName = $data['message']['from']['first_name'];

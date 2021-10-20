@@ -28,8 +28,8 @@ class DatabaseManager extends DatabaseConnection {
 		}
 	}
 
-	public function add($object, $name) {
-		$sql = "INSERT INTO listing (street, house, rooms, floor, area, landArea, price, owner, name) VALUES (
+	public function add($object, $name, $userId) {
+		$sql = "INSERT INTO listing (street, house, rooms, floor, area, landArea, price, owner, name, userId) VALUES (
 			:street,
 			:house,
 			:rooms,
@@ -38,7 +38,8 @@ class DatabaseManager extends DatabaseConnection {
 			:landArea,
 			:price,
 			:owner,
-			:name
+			:name,
+			:userId
 		)";
 		$inputs = [
 			":street" => $object->street,
@@ -49,7 +50,8 @@ class DatabaseManager extends DatabaseConnection {
 			":landArea" => $object->landArea,
 			":price" => $object->price,
 			":owner" => $object->owner,
-			":name" => $name
+			":name" => $name,
+			":userId" => $userId
 		];
 		$query = PDO::prepare($sql);
 		$query->execute($inputs) or die(print_r($query->errorInfo(), true));
@@ -68,6 +70,19 @@ class DatabaseManager extends DatabaseConnection {
 			$data = "$street, $house, $price";
 			return $data;
 		}
+	}
+
+	public function getAllForToday() {
+		$currentDate = date('Y-m-d');
+		$sql = "SELECT * FROM listing WHERE date = :date";
+		$query = PDO::prepare($sql);
+		$query->execute([":date" => $currentDate]) or die(print_r($query->errorInfo(), true));
+		$result = $query->fetchAll();
+		return $result;
+	}
+
+	public function deleteNotRelevant() {
+
 	}
 
 	public function delete($id) {

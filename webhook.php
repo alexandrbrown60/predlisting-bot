@@ -8,14 +8,14 @@ ini_set('display_startup_errors', 1);
 //подключение констант и классов
 require 'constants.php';
 require 'classes/Telegram.php';
-require 'classes/KeyboardButton.php';
 require 'classes/Object.php';
 require 'classes/CrmFinder.php';
 require 'classes/DatabaseConnection.php';
 require 'classes/DatabaseManager.php';
 
 $update = json_decode(file_get_contents("php://input"), JSON_OBJECT_AS_ARRAY);
-$telegram = new Telegram($update);
+$telegram = new Telegram();
+$telegram->getUpdate($update);
 $database = new DatabaseManager('alexanb0_listing');
 
 //присылаем приветственное сообщение
@@ -48,12 +48,11 @@ if($telegram->isMessage()) {
                 if($objectExist) {
 
                     //Если объект свободен, записываем его в БД и отправляем кнопки
-                    $id = $database->add($object, $userName);
+                    $id = $database->add($object, $userName, $chat_id);
 
-                    $button1 = array("text" => "Встреча","callback_data" => "meet$id");
                     $button2 = array("text" => "Бронь", "callback_data" => "book$id");
                     $button3 = array("text" => "Отказ", "callback_data" => "fail$id");
-                    $inlineKeyboard = [[$button1],[$button2], [$button3]];
+                    $inlineKeyboard = [[$button2], [$button3]];
                     $keyboard = ["inline_keyboard" => $inlineKeyboard];
                     $replyMarkup = json_encode($keyboard);
                     $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект свободен. Выберите действие:", "reply_markup" => $replyMarkup]);
@@ -75,12 +74,6 @@ else {
     $clickedButton = $telegram->clickedButton;
     $chatId = $telegram->userId;
 
-    if(strripos($clickedButton, "meet") !== false) {
-        $objectId = str_replace("meet", "", $clickedButton);
-        $database->setDate($objectId, 4);
-        $object = $database->get($objectId);
-        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Объект $object забронирован за вами на 4 дня вперёд"]);
-    }
     if(strripos($clickedButton, "book") !== false) {
         $objectId = str_replace("book", "", $clickedButton);
         $database->setDate($objectId, 2);
@@ -90,6 +83,13 @@ else {
     if(strripos($clickedButton, "fail") !== false) {
         $objectId = str_replace("fail", "", $clickedButton);
         $database->delete($objectId);
+        $textArray = ["Значит, повезёт со следующим! 😉", "Следующий ты точно возьмешь! ✊", "Сфера предсказания говорит, что следующий объект ты возьмешь без проблем 🔮", "Ничего, бывает. Объекты наберутся, ты не переживай 😊"]
+        $telegram->sendMessage(["chat_id" => $chatId, "text" => array_rand($textArray)]);
+    }
+    if(strripos($clickedButton, "hook") !== false) {
+        $objectId = str_replace("hook", "", $clickedButton);
+        $database->delete($objectId);
+        $telegram->sendMessage(["chat_id" => $chatId, "text" => "Здорово! Не забудьте внести объект в CRM"]);
     }
 }
 
