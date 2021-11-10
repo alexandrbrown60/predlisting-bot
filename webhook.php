@@ -49,17 +49,18 @@ if($telegram->isMessage()) {
 
                     //Если объект свободен, записываем его в БД и отправляем кнопки
                     $id = $database->add($object, $userName, $chat_id);
+                    $object = $database->get($object);
 
                     $button2 = array("text" => "Бронь", "callback_data" => "book$id");
                     $button3 = array("text" => "Отказ", "callback_data" => "fail$id");
                     $inlineKeyboard = [[$button2], [$button3]];
                     $keyboard = ["inline_keyboard" => $inlineKeyboard];
                     $replyMarkup = json_encode($keyboard);
-                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект свободен. Выберите действие:", "reply_markup" => $replyMarkup]);
+                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект $object свободен. Выберите действие:", "reply_markup" => $replyMarkup]);
                 
                 }
                 else {
-                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект забронирован"]);
+                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Похоже, что объект $object уже забронирован за другим риелтором"]);
                 }
                 
             }

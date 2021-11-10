@@ -16,17 +16,18 @@ class Object {
 		foreach ($array as $value) {
 			if(strripos($value, "ком") !== false) {
 				$this->rooms = trim(str_replace("ком", "", $value));
-			}
-			if(strripos($value, "м2") !== false || strripos($value, "квм")) {
-				$areaData = ["м2", "квм"];
+			}	
+			if(strripos($value, "м2") !== false || strripos($value, "квм") !== false || (strripos($value, "м") !== false && strlen($value) <= 7)) {
+				$areaData = ["м2", "квм", "м"];
 				$this->area = trim(str_replace($areaData, "", $value));
 			}
+			if(strripos($value, "эт") !== false || (strripos($value, "э") !== false && strlen($value) < 5)) {
+				$floorsData = ["эт", "э"];
+				$this->floor = trim(str_replace($floorsData, "", $value));
+				}
 			if(strripos($value, "сот") !== false) {
-				$this->landArea = trim(str_replace("сот", "", $value));
-			}
-			if(strripos($value, "эт") !== false) {
-				$this->floor = trim(str_replace("эт", "", $value));
-			}
+					$this->landArea = trim(str_replace("сот", "", $value));
+				}
 			if(is_numeric($value) && strlen($value) > 3) {
 				$this->price = $value * 1000;
 			}
