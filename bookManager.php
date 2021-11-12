@@ -24,6 +24,13 @@ foreach ($objects as $key => $value) {
 	$price = $objects[$key]['price'];
 	$owner = $objects[$key]['owner'];
 	$object = "$street, $house, $price, $owner";
+	$orders = $objects[$key]['orders'];
+	$manager = $objects[$key]['name'];
+
+	if($orders >= 3) {
+		$message = "Риелтор $manager забронировал объект $object 3 или более раз";
+		$telegram->sendMessage(["chat_id" => -770476917, "text" => $message]);
+	}
 
 
 	//отправляем сообщение

@@ -97,7 +97,7 @@ class DatabaseManager extends DatabaseConnection {
 
 	public function setDate($id, $numberOfDays) {
 		$date = date('Y-m-d', strtotime("+$numberOfDays day"));
-		$sql = "UPDATE listing SET date = :date WHERE id = :id";
+		$sql = "UPDATE listing SET date = :date, orders = orders + 1 WHERE id = :id";
 		$query = PDO::prepare($sql);
 		$query->execute(array(":date" => $date, ":id" => $id)) or die(print_r($query->errorInfo(), true));
 	}

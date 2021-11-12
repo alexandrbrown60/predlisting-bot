@@ -51,12 +51,16 @@ class Object {
 	
 	}
 
-	public function checkPrice() {
-		if(empty($this->price)) {
-			$text = "Вы не ввели стоимость объекта";
+	public function check() {
+		if(empty($this->price) || empty($this->area)) {
 			return false;
 		}
 		return true;
+	}
+
+	public function getInfo() {
+		$objectString = "$this->street, $this->house";
+		return $objectString;
 	}
 
 

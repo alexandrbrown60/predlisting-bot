@@ -35,7 +35,7 @@ if($telegram->isMessage()) {
 
         //проверка ввода стоимости
         if($object->checkPrice() == false) {
-            $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Вы не ввели стоимость объекта"]);
+            $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Вы не ввели площадь или стоимость объекта"]);
         }
         else {
             //проверяем на наличие в CRM
@@ -49,18 +49,18 @@ if($telegram->isMessage()) {
 
                     //Если объект свободен, записываем его в БД и отправляем кнопки
                     $id = $database->add($object, $userName, $chat_id);
-                    $object = $database->get($object);
+                    $objectInfo = $object->getInfo();
 
                     $button2 = array("text" => "Бронь", "callback_data" => "book$id");
                     $button3 = array("text" => "Отказ", "callback_data" => "fail$id");
                     $inlineKeyboard = [[$button2], [$button3]];
                     $keyboard = ["inline_keyboard" => $inlineKeyboard];
                     $replyMarkup = json_encode($keyboard);
-                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект $object свободен. Выберите действие:", "reply_markup" => $replyMarkup]);
+                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Объект $objectInfo свободен. Выберите действие:", "reply_markup" => $replyMarkup]);
                 
                 }
                 else {
-                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Похоже, что объект $object уже забронирован за другим риелтором"]);
+                    $telegram->sendMessage(["chat_id" => $chat_id, "text" => "Похоже, что объект $objectInfo уже забронирован за другим риелтором"]);
                 }
                 
             }
